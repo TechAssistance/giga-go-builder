@@ -1,6 +1,7 @@
 #!/bin/bash
 
 package=$1
+release=$2
 if [[ -z "$package" ]]; then
   echo "usage: $0 <package-name>"
   exit 1
@@ -24,4 +25,7 @@ do
    		echo 'An error has occurred! Aborting the script execution...'
 		exit 1
 	fi
+	output_name=$package_name'-'$GOOS'-'$GOARCH
+	archive_name=$package_name'-'$GOOS'-'$GOARCH'-'$release'-'.tgz
+	tar -czvf $archive_name $output_name
 done
