@@ -7,7 +7,7 @@ if [[ -z "$package" ]]; then
 fi
 package_split=(${package//\// })
 package_name=${package_split[-1]}
-platforms=("windows/amd64" "windows/386" "solaris/amd64" "plan9/amd64" "plan9/386" "openbsd/arm" "openbsd/amd64" "openbsd/386" "netbsd/arm" "netbsd/amd64" "netbsd/386" "linux/mips64le" "linux/mips64" "linux/mipsle" "linux/mips" "linux/ppc64le" "linux/ppc64le" "linux/arm64" "linux/arm" "linux/amd64" "linux/386" "freebsd/amd64" "freebsd/arm" "freebsd/386" "dragonfly/amd64" "darwin/arm64" "darwin/amd64" "darwin/386" "android/arm") 
+platforms=("windows/amd64" "windows/386" "solaris/amd64" "plan9/amd64" "plan9/386" "openbsd/arm" "openbsd/amd64" "openbsd/386" "netbsd/arm" "netbsd/amd64" "netbsd/386" "linux/mips64le" "linux/mips64" "linux/mipsle" "linux/mips" "linux/ppc64le" "linux/ppc64le" "linux/arm64" "linux/arm" "linux/amd64" "linux/386" "freebsd/amd64" "freebsd/arm" "freebsd/386" "dragonfly/amd64" "darwin/arm64" "darwin/amd64" "android/arm") 
 
 for platform in "${platforms[@]}"
 do
