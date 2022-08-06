@@ -1,31 +1,62 @@
 #!/bin/bash
+PROJDIR=$(cd `dirname $0`/.. && pwd)
 
-package=$1
-release=$2
-if [[ -z "$package" ]]; then
-  echo "usage: $0 <package-name>"
-  exit 1
+VERSION="${1}"
+TAG="v${VERSION}"
+USER="tomnomnom"
+REPO="httprobe"
+BINARY="${REPO}"
+
+if [[ -z "${VERSION}" ]]; then
+    echo "Usage: ${0} <version>"
+    exit 1
 fi
-package_split=(${package//\// })
-package_name=${package_split[-1]}
-platforms=("windows/amd64" "windows/386" "solaris/amd64" "plan9/amd64" "plan9/386" "openbsd/arm" "openbsd/amd64" "openbsd/386" "netbsd/arm" "netbsd/amd64" "netbsd/386" "linux/mips64le" "linux/mips64" "linux/mipsle" "linux/mips" "linux/ppc64le" "linux/ppc64le" "linux/arm64" "linux/arm" "linux/amd64" "linux/386" "freebsd/amd64" "freebsd/arm" "freebsd/386" "dragonfly/amd64" "darwin/arm64" "darwin/amd64" "android/arm") 
 
-for platform in "${platforms[@]}"
-do
-	platform_split=(${platform//\// })
-	GOOS=${platform_split[0]}
-	GOARCH=${platform_split[1]}
-	output_name=$package_name'-'$GOOS'-'$GOARCH
-	if [ $GOOS = "windows" ]; then
-		output_name+='.exe'
-	fi	
+if [[ -z "${GITHUB_TOKEN}" ]]; then
+    echo "You forgot to set your GITHUB_TOKEN"
+    exit 2
+fi
 
-	env GOOS=$GOOS GOARCH=$GOARCH go build -o $output_name $package
-	if [ $? -ne 0 ]; then
-   		echo 'An error has occurred! Aborting the script execution...'
-		exit 1
-	fi
-	output_name=$package_name'-'$GOOS'-'$GOARCH
-	archive_name=$package_name'-'$GOOS'-'$GOARCH'-'$release'-'.tgz
-	tar -czvf $archive_name $output_name
+cd ${PROJDIR}
+
+# Run the tests
+go test
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Aborting."
+    exit 3
+fi
+
+FILELIST=""
+
+for ARCH in "amd64" "386"; do
+    for OS in "darwin" "linux" "windows" "freebsd"; do
+
+        if [[ "${OS}" == "darwin" && "${ARCH}" == "386" ]]; then
+            continue
+        fi
+
+        BINFILE="${BINARY}"
+
+        if [[ "${OS}" == "windows" ]]; then
+            BINFILE="${BINFILE}.exe"
+        fi
+
+        rm -f ${BINFILE}
+
+        GOOS=${OS} GOARCH=${ARCH} go build github.com/${USER}/${REPO}
+
+        if [[ "${OS}" == "windows" ]]; then
+            ARCHIVE="${BINARY}-${OS}-${ARCH}-${VERSION}.zip"
+            zip ${ARCHIVE} ${BINFILE}
+            rm ${BINFILE}
+        else
+            ARCHIVE="${BINARY}-${OS}-${ARCH}-${VERSION}.tgz"
+            tar --create --gzip --file=${ARCHIVE} ${BINFILE}
+        fi
+
+        FILELIST="${FILELIST} ${PROJDIR}/${ARCHIVE}"
+    done
 done
+
+gh release create ${TAG} ${FILELIST}
+rm ${FILELIST}
